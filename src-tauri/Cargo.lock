@@ -5608,14 +5608,12 @@ dependencies = [
 name = "tauri-app"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "async-trait",
  "base64 0.22.1",
  "chrono",
  "futures",
  "image 0.25.8",
  "reqwest",
- "ring",
  "rusqlite",
  "screenshots",
  "serde",
@@ -5632,7 +5630,6 @@ dependencies = [
  "tauri-plugin-sql",
  "tauri-plugin-store",
  "tauri-plugin-updater",
- "tempfile",
  "thiserror 2.0.17",
  "tokio",
  "tracing",
