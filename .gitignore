@@ -26,3 +26,24 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Tauri signing keys and sensitive files (NEVER commit private keys)
+.tauri/*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Keep documentation and public keys
+!.tauri/*.md
+!.tauri/*.pub
+!.tauri/README.txt
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
