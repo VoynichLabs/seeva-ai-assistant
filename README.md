@@ -2,8 +2,8 @@
 
 AI assistant that appears anywhere, sees your screen.
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
-![Platform](https://img.shields.io/badge/platform-macOS-lightgrey.svg)
+![Version](https://img.shields.io/badge/version-0.1.2-blue.svg)
+![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)
 
 discord username  - thisisharsh7
 
@@ -36,24 +36,33 @@ I was switching to AI tools 50+ times per day while coding. The constant context
 
 ### Download Pre-built App
 
-Download the latest version for your platform from the [Releases](https://github.com/thisisharsh7/seeva-ai-assistant/releases) page:
+Download the latest version (v0.1.2) for your platform from the [Releases](https://github.com/thisisharsh7/seeva-ai-assistant/releases) page:
 
-- **macOS**: Download the `.dmg` file
-  - Apple Silicon (M1/M2/M3): `seeva-ai-assistant_aarch64.dmg`
-  - Intel: `seeva-ai-assistant_x64.dmg`
-- **Linux**:
-  - Debian/Ubuntu: `.deb` file
-  - Fedora/RHEL: `.rpm` file
-  - Universal: `.AppImage` file
-- **Windows**: Download the `.msi` or `.exe` installer
+#### macOS
+- **Apple Silicon (M1/M2/M3/M4)**: Download the `darwin_aarch64.app.tar.gz` file
+- **Intel**: Download the `darwin_x64.app.tar.gz` file
+- **First launch**: Right-click the app and select "Open". If you see an "app is damaged" error, run: `xattr -cr "/Applications/Seeva AI Assistant.app"`
+
+#### Windows
+- **EXE Installer**: Download the `x64-setup_windows.exe` file
+- **MSI Installer**: Download the `x64_en-US_windows.msi` file
+- **Requirements**: Windows 10 (64-bit) or later
+
+#### Linux
+- **Debian/Ubuntu**: Download the `.deb` file
+- **Fedora/RHEL**: Download the `.rpm` file
+- **Universal**: Download the `.AppImage` file (works on any distro)
+- **Requirements**: Ubuntu 20.04+ / Fedora 34+ or equivalent
 
 ### Auto-Updates
 
-Seeva AI Assistant includes automatic update checking. When a new version is available:
+Starting from v0.1.2, Seeva AI Assistant includes automatic update checking. When a new version is available:
 1. Open Settings (click the gear icon)
 2. Click "Update available" in the footer
 3. The update will download and install automatically
 4. The app will relaunch with the new version
+
+All updates are cryptographically signed to ensure security and authenticity.
 
 ### Development Setup
 
@@ -97,16 +106,20 @@ To create a signed release (requires setup of signing keys):
 
 1. Launch the app and go to Settings
 2. Add your Anthropic API key under AI Providers
-3. Grant macOS permissions when prompted (Screen Recording and Accessibility are required for screen capture)
-4. Press `Cmd+Shift+C` to toggle the window from anywhere
+3. Grant system permissions when prompted:
+   - **macOS**: Screen Recording and Accessibility permissions
+   - **Windows**: Screen capture access
+   - **Linux**: Screen capture permissions (varies by distro)
+4. Press `Cmd+Shift+C` (macOS) or `Ctrl+Shift+C` (Windows/Linux) to toggle the window from anywhere
 5. Click "Watch Screen" to capture and analyze your screen
 6. Ask questions about what you are seeing
-7. Press `Cmd+Shift+C` again to hide the window and return to work
+7. Press the hotkey again to hide the window and return to work
 
 ## Tech Stack
 
 **Frontend**: React 19, TypeScript, Tailwind CSS, Zustand
 **Backend**: Tauri 2.9, Rust, SQLite, reqwest
+**Platforms**: macOS (10.15+), Windows (10+), Linux (Ubuntu 20.04+, Fedora 34+)
 
 ## Development
 
@@ -119,8 +132,8 @@ src-tauri/    - Rust backend
 
 ## Keyboard Shortcuts
 
-- `Cmd+Shift+C` - Toggle window visibility from anywhere
-- `Cmd+N` - Create new conversation thread
+- `Cmd+Shift+C` (macOS) / `Ctrl+Shift+C` (Windows/Linux) - Toggle window visibility from anywhere
+- `Cmd+N` (macOS) / `Ctrl+N` (Windows/Linux) - Create new conversation thread
 - `Ctrl+Enter` - Send message
 - `Escape` - Hide window
 
@@ -131,14 +144,18 @@ Seeva stores all data locally on your computer. No cloud services or external se
 ### What Gets Stored
 
 **Database (SQLite)**
-- Location: `~/.config/ai.seeva.assistant/seeva.db`
+- Location:
+  - macOS/Linux: `~/.config/ai.seeva.assistant/seeva.db`
+  - Windows: `%APPDATA%\ai.seeva.assistant\seeva.db`
 - Contents:
   - All conversation threads and messages
   - Screen captures when you use "Watch Screen"
   - Message metadata including timestamps and token usage
 
 **Settings File (JSON)**
-- Location: `~/.config/ai.seeva.assistant/settings.json`
+- Location:
+  - macOS/Linux: `~/.config/ai.seeva.assistant/settings.json`
+  - Windows: `%APPDATA%\ai.seeva.assistant\settings.json`
 - Contents:
   - API keys for AI providers
   - Default provider and model settings
