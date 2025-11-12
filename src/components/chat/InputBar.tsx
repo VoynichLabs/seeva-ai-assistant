@@ -155,9 +155,9 @@ export function InputBar() {
     <div className="flex-shrink-0">
       {/* API Key Warning */}
       {!hasApiKey && (
-        <div className="px-4 pb-2">
+        <div className="px-2 sm:px-4 pb-2">
           <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
-            <span className="text-sm text-yellow-200 flex-1">
+            <span className="text-[13px] text-yellow-200 flex-1">
               API key not configured. Please add your API key to send messages.
             </span>
             <Button
@@ -184,7 +184,7 @@ export function InputBar() {
 
       {/* Input Bar - Full Width */}
       <div className="border-t border-border-subtle glass-card backdrop-blur-sm">
-        <div className="flex items-start gap-2 px-4 py-3">
+        <div className="flex items-start gap-2 px-2 sm:px-4 py-3 min-w-0">
           {/* Text Input */}
           <textarea
             ref={textareaRef}
@@ -194,7 +194,8 @@ export function InputBar() {
             placeholder="Ask me anything..."
             disabled={isStreaming || isSending}
             rows={1}
-            className="flex-1 bg-transparent text-primary placeholder-text-tertiary
+            className="flex-1 min-w-0 bg-transparent text-primary placeholder-text-tertiary
+                       text-[15px] leading-[1.4]
                        focus:outline-none resize-none overflow-y-auto max-h-40
                        disabled:opacity-50 disabled:cursor-not-allowed"
           />
@@ -244,7 +245,7 @@ export function InputBar() {
 
         {/* Shortcut hint */}
         {appSettings?.shortcut && (
-          <div className="pb-2 text-center text-xs text-tertiary">
+          <div className="pb-2 text-center text-[13px] text-tertiary">
             Press {formatShortcutDisplay(appSettings.shortcut)} to toggle overlay
           </div>
         )}

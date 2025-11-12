@@ -41,7 +41,8 @@ export const chatAPI = {
     images: string[] | null,
     provider: AIProvider,
     apiKey: string,
-    model: string
+    model: string,
+    maxTokens?: number
   ): Promise<Message> => {
     return await invoke('send_message', {
       threadId,
@@ -50,6 +51,7 @@ export const chatAPI = {
       provider,
       apiKey,
       model,
+      maxTokens,
     });
   },
 

@@ -10,17 +10,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm text-secondary mb-1.5">
+          <label className="block text-[13px] text-secondary mb-1.5">
             {label}
           </label>
         )}
         <input
           ref={ref}
-          className={`glass-input w-full px-3 py-1.5 text-primary placeholder:text-tertiary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 ${className}`}
+          className={`glass-input w-full px-3 py-1.5 text-[13px] text-primary placeholder:text-tertiary focus:outline-none focus:ring-2 focus:ring-accent-blue/50 ${className}`}
           {...props}
         />
         {error && (
-          <p className="mt-1 text-sm text-red-400">{error}</p>
+          <p className="mt-1 text-[12px] text-red-400">{error}</p>
         )}
       </div>
     );

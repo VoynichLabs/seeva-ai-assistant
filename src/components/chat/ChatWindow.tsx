@@ -18,26 +18,28 @@ export function ChatWindow() {
   return (
     <div className="w-full h-screen flex overflow-hidden relative" style={{ backgroundColor: 'transparent' }}>
       {/* Main Chat Area - Full width, no sidebar */}
-      <div className="flex-1 flex flex-col glass-window">
+      <div className="flex-1 flex flex-col glass-window min-w-[360px]">
         {/* Header Bar */}
         <div
           data-tauri-drag-region
           className="flex items-center justify-between px-3 py-1.5 border-b border-border-subtle cursor-move"
         >
           {/* Left Side - Settings & Thread Selector */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
             <button
               onClick={openSettings}
-              className="p-1.5 rounded-lg bg-glass-dark/10 hover:bg-glass-light border border-border-subtle transition-all"
+              className="p-1.5 rounded hover:bg-glass-darker transition-colors flex-shrink-0"
               title="Settings"
             >
               <Settings size={18} className="text-secondary" />
             </button>
-            <ThreadSelector />
+            <div className="min-w-0 flex-1 max-w-[200px]">
+              <ThreadSelector />
+            </div>
           </div>
 
           {/* Right Side - Window Controls */}
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5 flex-shrink-0">
             {/* Theme Toggle */}
             <ThemeToggle />
 

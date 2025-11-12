@@ -15,6 +15,7 @@ pub async fn send_message(
     provider: String,
     api_key: String,
     model: String,
+    max_tokens: Option<u32>,
     thread_manager: State<'_, Arc<ThreadManager>>,
     app_handle: tauri::AppHandle,
 ) -> Result<Message, String> {
@@ -63,7 +64,7 @@ pub async fn send_message(
         model: model.clone(),
         system: Some("You are a helpful AI assistant.".to_string()),
         temperature: Some(0.7),
-        max_tokens: Some(4096),
+        max_tokens: max_tokens.or(Some(4096)), // Use provided max_tokens or default to 4096
         stream: true,
     };
 

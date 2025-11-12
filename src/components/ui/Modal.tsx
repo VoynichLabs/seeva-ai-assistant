@@ -67,7 +67,7 @@ export function Modal({
       >
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b border-border-subtle">
-          <h2 className="text-lg font-semibold text-primary">{title}</h2>
+          <h2 className="text-[16px] font-semibold text-primary">{title}</h2>
           {showCloseButton && (
             <button
               onClick={onClose}

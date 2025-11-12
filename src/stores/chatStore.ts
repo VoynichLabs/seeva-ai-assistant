@@ -312,7 +312,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
         images,
         provider as any,
         providerSettings.apiKey,
-        providerSettings.defaultModel
+        providerSettings.defaultModel,
+        providerSettings.maxTokens
       );
 
       // Add assistant message

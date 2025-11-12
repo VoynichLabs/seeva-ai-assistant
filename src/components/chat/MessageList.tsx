@@ -21,8 +21,8 @@ export function MessageList() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center text-tertiary">
           <MessageSquare size={32} className="mx-auto mb-2 opacity-50" />
-          <p className="text-sm">No conversation selected</p>
-          <p className="text-xs mt-1">Create a new thread to start chatting</p>
+          <p className="text-[13px]">No conversation selected</p>
+          <p className="text-[12px] mt-1">Create a new thread to start chatting</p>
         </div>
       </div>
     );
@@ -33,8 +33,8 @@ export function MessageList() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center text-tertiary max-w-md">
           <div className="text-4xl mb-4">💬</div>
-          <p className="text-sm">Start a conversation</p>
-          <p className="text-xs mt-1">
+          <p className="text-[13px]">Start a conversation</p>
+          <p className="text-[12px] mt-1">
             Type a message below or click to capture a screenshot
           </p>
         </div>
@@ -45,7 +45,7 @@ export function MessageList() {
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-y-auto px-4 py-6 pb-6 space-y-3"
+      className="flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-4 py-6 pb-6 space-y-3"
     >
       {/* Existing messages */}
       {currentMessages.map((message) => (
@@ -55,16 +55,16 @@ export function MessageList() {
       {/* Streaming message (if any) */}
       {isStreaming && streamingContent && (
         <div className="flex justify-start mb-3 animate-slide-in">
-          <div className="flex flex-col max-w-[75%]">
-            <div className="text-xs text-tertiary font-medium mb-1 ml-1">
+          <div className="flex flex-col max-w-[90%] sm:max-w-[85%] md:max-w-[75%] min-w-[250px]">
+            <div className="text-[11px] text-tertiary font-medium mb-1 ml-1">
               Seeva
             </div>
             <div className="message-assistant px-3 py-2.5">
-              <div className="prose prose-sm prose-invert max-w-none text-[14px]">
-                <p className="my-0 leading-[1.5]">{streamingContent}</p>
+              <div className="prose prose-sm prose-invert max-w-none text-[13.5px]">
+                <p className="my-0 leading-[1.6]">{streamingContent}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 mt-1 px-1 text-xs text-tertiary">
+            <div className="flex items-center gap-2 mt-1 px-1 text-[11px] text-tertiary">
               <Spinner size="sm" className="text-accent-blue" />
               <span>Generating...</span>
             </div>

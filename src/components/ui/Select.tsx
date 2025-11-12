@@ -12,7 +12,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-secondary mb-1.5">
+          <label className="block text-[13px] font-medium text-secondary mb-1.5">
             {label}
           </label>
         )}
@@ -22,7 +22,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             className={`
               w-full px-3 py-1.5 pr-10
               glass-card
-              text-primary
+              text-primary text-[13px]
               focus:outline-none focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue
               disabled:opacity-50 disabled:cursor-not-allowed
               appearance-none cursor-pointer
@@ -43,7 +43,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </div>
         </div>
         {error && (
-          <p className="mt-1 text-sm text-red-400">{error}</p>
+          <p className="mt-1 text-[12px] text-red-400">{error}</p>
         )}
       </div>
     );
