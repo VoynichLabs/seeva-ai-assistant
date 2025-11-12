@@ -4,14 +4,14 @@ import { useUIStore } from '../../stores/uiStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { screenshotAPI } from '../../lib/tauri-api';
 import { Button } from '../ui';
-import { Camera, Send, Settings, Loader2 } from 'lucide-react';
+import { Camera, Send, Settings, Loader2, Plus } from 'lucide-react';
 import { ScreenshotPreview } from './ScreenshotPreview';
 
 export function InputBar() {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const { sendMessage, isStreaming } = useChatStore();
+  const { sendMessage, isStreaming, createThread } = useChatStore();
   const {
     currentScreenshot,
     screenshotCache,
@@ -142,6 +142,15 @@ export function InputBar() {
       .replace(/\+/g, '');
   };
 
+  const handleNewThread = () => {
+    const timestamp = new Date().toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+    createThread(`New Thread ${timestamp}`);
+  };
+
   return (
     <div className="flex-shrink-0">
       {/* API Key Warning */}
@@ -193,6 +202,17 @@ export function InputBar() {
           {/* Buttons - hide during loading, show spinner instead */}
           {!isSending && !isStreaming ? (
             <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleNewThread}
+                disabled={isCapturingScreenshot || isCompressingScreenshot}
+                className="flex-shrink-0 p-2"
+                title="New thread"
+              >
+                <Plus size={22} />
+              </Button>
+
               <Button
                 variant="ghost"
                 size="sm"
