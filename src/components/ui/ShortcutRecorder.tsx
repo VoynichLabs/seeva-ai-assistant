@@ -103,10 +103,10 @@ export function ShortcutRecorder({ value, onChange }: ShortcutRecorderProps) {
       <div
         ref={inputRef}
         className={`
-          flex items-center justify-between px-3 py-1.5 rounded-lg border-2 transition-all
+          flex items-center justify-between px-3 py-1.5 rounded-lg border-1 transition-all
           ${isRecording
             ? 'border-accent-blue bg-accent-blue/10'
-            : 'glass-card hover:border-accent-blue/30'
+            : 'glass-input hover:border-accent-blue/30'
           }
         `}
       >

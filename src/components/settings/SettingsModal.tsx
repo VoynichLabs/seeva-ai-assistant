@@ -3,17 +3,39 @@ import { Modal, Button, Select, Input, UpdateChecker } from '../ui';
 import { ShortcutRecorder } from '../ui/ShortcutRecorder';
 import { useUIStore } from '../../stores/uiStore';
 import { useSettingsStore } from '../../stores/settingsStore';
-import { Eye, EyeOff, ExternalLink } from 'lucide-react';
-import type { AppSettings } from '../../lib/tauri-api';
+import { useToast } from '../../hooks/useToast';
+import { Eye, EyeOff, ExternalLink, Loader2 } from 'lucide-react';
+import type { AppSettings, ProviderSettings } from '../../lib/tauri-api';
+import { settingsAPI } from '../../lib/tauri-api';
 import { openUrl } from '@tauri-apps/plugin-opener';
 
-const AVAILABLE_MODELS = [
-  { value: 'claude-sonnet-4-5-20250929', label: 'Claude 4.5 Sonnet (Latest)' },
-  { value: 'claude-haiku-4-5-20251001', label: 'Claude 4.5 Haiku (Fast)' },
-  { value: 'claude-opus-4-1-20250805', label: 'Claude 4.1 Opus (Most Capable)' },
-  { value: 'claude-sonnet-4-20250514', label: 'Claude 4 Sonnet' },
-  { value: 'claude-3-7-sonnet-20250219', label: 'Claude 3.7 Sonnet' },
-];
+const PROVIDER_MODELS = {
+  anthropic: [
+    { value: 'claude-sonnet-4-5-20250929', label: 'Claude 4.5 Sonnet (Latest)' },
+    { value: 'claude-haiku-4-5-20251001', label: 'Claude 4.5 Haiku (Fast)' },
+    { value: 'claude-opus-4-1-20250805', label: 'Claude 4.1 Opus (Most Capable)' },
+    { value: 'claude-sonnet-4-20250514', label: 'Claude 4 Sonnet' },
+    { value: 'claude-3-7-sonnet-20250219', label: 'Claude 3.7 Sonnet' },
+  ],
+  openai: [
+    { value: 'gpt-4o', label: 'GPT-4o (Latest)' },
+    { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Fast & Affordable)' },
+    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+    { value: 'gpt-4', label: 'GPT-4' },
+  ],
+  openrouter: [
+    { value: 'anthropic/claude-sonnet-4', label: 'Claude Sonnet 4' },
+    { value: 'anthropic/claude-3.7-sonnet', label: 'Claude 3.7 Sonnet' },
+    { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet' },
+    { value: 'anthropic/claude-3.5-haiku', label: 'Claude 3.5 Haiku' },
+    { value: 'openai/gpt-4o', label: 'GPT-4o' },
+    { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini' },
+    { value: 'google/gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash' },
+    { value: 'google/gemini-pro-1.5', label: 'Gemini Pro 1.5' },
+    { value: 'mistralai/pixtral-large-latest', label: 'Pixtral Large (Vision)' },
+    { value: 'x-ai/grok-2-vision-1212', label: 'Grok 2 Vision' },
+  ],
+};
 
 const MAX_TOKENS_OPTIONS = [
   { value: '1024', label: '1024 tokens (Short responses)' },
@@ -23,129 +45,167 @@ const MAX_TOKENS_OPTIONS = [
   { value: '16384', label: '16384 tokens (Maximum)' },
 ];
 
+const PROVIDER_INFO = {
+  anthropic: {
+    name: 'Anthropic (Claude)',
+    keyPrefix: 'sk-ant-api',
+    keyUrl: 'https://console.anthropic.com/settings/keys',
+  },
+  openai: {
+    name: 'OpenAI (GPT)',
+    keyPrefix: 'sk-',
+    keyUrl: 'https://platform.openai.com/api-keys',
+  },
+  openrouter: {
+    name: 'OpenRouter (100+ Models)',
+    keyPrefix: 'sk-or-v1',
+    keyUrl: 'https://openrouter.ai/keys',
+  },
+};
+
+type ProviderKey = 'anthropic' | 'openai' | 'openrouter';
+
 export function SettingsModal() {
   const { isSettingsOpen, closeSettings } = useUIStore();
   const { settings: storeSettings, updateSettings, isLoading } = useSettingsStore();
+  const toast = useToast();
 
   const [localSettings, setLocalSettings] = useState<AppSettings | null>(null);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+  const [showApiKeys, setShowApiKeys] = useState<Record<ProviderKey, boolean>>({
+    anthropic: false,
+    openai: false,
+    openrouter: false,
+  });
+  const [testingProviders, setTestingProviders] = useState<Record<ProviderKey, boolean>>({
+    anthropic: false,
+    openai: false,
+    openrouter: false,
+  });
+  const [selectedProvider, setSelectedProvider] = useState<ProviderKey>('anthropic');
 
   // Initialize local settings when modal opens
   useEffect(() => {
     if (isSettingsOpen && storeSettings) {
       setLocalSettings(JSON.parse(JSON.stringify(storeSettings)));
-      setHasChanges(false);
-      setTestResult(null);
+      // Select the default provider tab
+      setSelectedProvider((storeSettings.defaultProvider as ProviderKey) || 'anthropic');
     }
   }, [isSettingsOpen, storeSettings]);
 
+  // Auto-save helper
+  const autoSave = async (updates: Partial<AppSettings>) => {
+    if (!localSettings) return null;
+
+    const newSettings = { ...localSettings, ...updates };
+    setLocalSettings(newSettings);
+
+    try {
+      await updateSettings(newSettings);
+      // Reload from backend to ensure localSettings stays in sync
+      const freshSettings = await settingsAPI.get();
+      setLocalSettings(freshSettings);
+      return freshSettings;
+    } catch (error) {
+      console.error('Failed to auto-save settings:', error);
+      return null;
+    }
+  };
+
   const handleShortcutChange = (shortcut: string) => {
     if (!localSettings) return;
-
-    setLocalSettings({
-      ...localSettings,
-      shortcut,
-    });
-    setHasChanges(true);
+    autoSave({ shortcut });
   };
 
-  const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  // Handle provider selection (radio button)
+  const handleProviderSelect = async (provider: ProviderKey) => {
     if (!localSettings) return;
 
-    setLocalSettings({
-      ...localSettings,
-      anthropic: {
-        ...localSettings.anthropic,
-        defaultModel: e.target.value,
-      },
-    });
-    setHasChanges(true);
+    // Disable all providers except the selected one
+    const updates: Partial<AppSettings> = {
+      defaultProvider: provider,
+      anthropic: { ...localSettings.anthropic, enabled: provider === 'anthropic' },
+      openai: { ...localSettings.openai, enabled: provider === 'openai' },
+      openrouter: { ...localSettings.openrouter, enabled: provider === 'openrouter' },
+    };
+
+    await autoSave(updates);
   };
 
-  const handleMaxTokensChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleProviderSettingChange = async (
+    provider: ProviderKey,
+    field: keyof ProviderSettings,
+    value: string | number | boolean
+  ) => {
     if (!localSettings) return;
 
-    setLocalSettings({
-      ...localSettings,
-      anthropic: {
-        ...localSettings.anthropic,
-        maxTokens: parseInt(e.target.value, 10),
+    const updates = {
+      [provider]: {
+        ...localSettings[provider],
+        [field]: value,
       },
-    });
-    setHasChanges(true);
+    };
+
+    await autoSave(updates);
   };
 
-  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleApiKeyBlur = async (provider: ProviderKey, value: string) => {
+    // Save when user finishes typing (on blur)
+    await handleProviderSettingChange(provider, 'apiKey', value);
+
+    // Auto-validate if API key is not empty
+    if (value.trim()) {
+      await handleTestConnection(provider, true); // true = auto-validation
+    }
+  };
+
+  const handleTestConnection = async (provider: ProviderKey, _isAutoValidation = false) => {
     if (!localSettings) return;
+    const providerSettings = localSettings[provider];
+    if (!providerSettings.apiKey) return;
 
-    setLocalSettings({
-      ...localSettings,
-      anthropic: {
-        ...localSettings.anthropic,
-        apiKey: e.target.value,
-      },
-    });
-    setHasChanges(true);
-  };
-
-  const handleTestConnection = async () => {
-    if (!localSettings?.anthropic.apiKey) return;
-
-    setTesting(true);
-    setTestResult(null);
+    setTestingProviders({ ...testingProviders, [provider]: true });
 
     try {
-      // Simple test: check if API key format is valid
-      const apiKey = localSettings.anthropic.apiKey.trim();
+      const result = await settingsAPI.validateApiKey(provider, providerSettings.apiKey.trim());
 
-      if (!apiKey.startsWith('sk-ant-')) {
-        setTestResult('error');
-        setTesting(false);
-        return;
+      // Show success toast
+      toast.success('✓ API key validated successfully', 3000);
+
+      // Save validation state and get fresh settings
+      await settingsAPI.setValidationState(provider, true);
+      const freshSettings = await autoSave({
+        [provider]: {
+          ...localSettings[provider],
+          isValidated: true,
+        },
+      });
+
+      // Update available models using fresh settings
+      if (result.availableModels && result.availableModels.length > 0 && freshSettings) {
+        await autoSave({
+          [provider]: {
+            ...freshSettings[provider],
+            defaultModel: result.defaultModel,
+          },
+        });
       }
-
-      // TODO: Make actual API call to test
-      // For now, just validate format
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setTestResult('success');
     } catch (error) {
       console.error('Connection test failed:', error);
-      setTestResult('error');
+
+      // Show error toast
+      toast.error('✗ Invalid API key. Please check and try again', 4000);
+
+      // Save validation state as false
+      await settingsAPI.setValidationState(provider, false);
+      await handleProviderSettingChange(provider, 'isValidated', false);
     } finally {
-      setTesting(false);
+      setTestingProviders({ ...testingProviders, [provider]: false });
     }
   };
 
-  const handleSave = async () => {
-    if (!localSettings) return;
-
-    setSaving(true);
+  const handleOpenApiKeyUrl = async (provider: ProviderKey) => {
     try {
-      await updateSettings(localSettings);
-      setHasChanges(false);
-      closeSettings();
-    } catch (error) {
-      console.error('Failed to save settings:', error);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleCancel = () => {
-    if (hasChanges) {
-      const confirmed = window.confirm('You have unsaved changes. Are you sure you want to close?');
-      if (!confirmed) return;
-    }
-    closeSettings();
-  };
-
-  const handleOpenApiKeyUrl = async () => {
-    try {
-      await openUrl('https://console.anthropic.com/settings/keys');
+      await openUrl(PROVIDER_INFO[provider].keyUrl);
     } catch (error) {
       console.error('Failed to open URL:', error);
     }
@@ -155,119 +215,170 @@ export function SettingsModal() {
     return null;
   }
 
-  return (
-    <Modal
-      isOpen={isSettingsOpen}
-      onClose={handleCancel}
-      title="Settings"
-      maxWidth="md"
-    >
-      <div className="space-y-4">
-        {/* Global Shortcut Key */}
-        <div>
-          <label className="block text-[13px] font-medium text-primary mb-1.5">
-            Global Shortcut Key
-          </label>
-          <ShortcutRecorder
-            value={localSettings.shortcut}
-            onChange={handleShortcutChange}
+  const renderProviderSection = (provider: ProviderKey) => {
+    const providerSettings = localSettings[provider];
+    const info = PROVIDER_INFO[provider];
+    const models = PROVIDER_MODELS[provider];
+    const isActive = localSettings.defaultProvider === provider;
+
+    return (
+      <div key={provider} className="space-y-4 p-4 rounded-lg border border-border-subtle bg-surface-secondary/30">
+        {/* Radio Button - Use this provider */}
+        <label className="flex items-center gap-3 cursor-pointer group">
+          <input
+            type="radio"
+            name="provider"
+            checked={isActive}
+            onChange={() => handleProviderSelect(provider)}
+            className="w-4 h-4 text-accent-blue focus:ring-2 focus:ring-accent-blue"
           />
-          <p className="mt-1.5 text-[12px] text-tertiary">
-            Set a keyboard shortcut to toggle the app from anywhere
-          </p>
+          <span className="text-sm font-semibold text-primary group-hover:text-accent-blue transition-colors">
+            Use this provider
+          </span>
+        </label>
+
+        {/* API Key */}
+        <div>
+          <label className="block text-xs font-medium text-primary mb-1.5">
+            API Key
+          </label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Input
+                type={showApiKeys[provider] ? 'text' : 'password'}
+                value={providerSettings.apiKey}
+                onChange={async (e) => {
+                  // Update local state immediately for responsive UI
+                  setLocalSettings({
+                    ...localSettings,
+                    [provider]: {
+                      ...providerSettings,
+                      apiKey: e.target.value,
+                      isValidated: false, // Reset validation when key changes
+                    },
+                  });
+                  // Reset validation state in backend
+                  await settingsAPI.setValidationState(provider, false);
+                }}
+                onBlur={(e) => handleApiKeyBlur(provider, e.target.value)}
+                placeholder={`${info.keyPrefix}...`}
+                className="pr-10 text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowApiKeys({ ...showApiKeys, [provider]: !showApiKeys[provider] })}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-primary transition-colors"
+              >
+                {showApiKeys[provider] ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            <Button
+              variant="secondary"
+              onClick={() => handleTestConnection(provider, false)}
+              disabled={!providerSettings.apiKey.trim() || testingProviders[provider]}
+              isLoading={testingProviders[provider]}
+              className="flex-shrink-0 text-xs px-3"
+            >
+              {testingProviders[provider] ? <Loader2 size={14} className="animate-spin" /> : 'Test'}
+            </Button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleOpenApiKeyUrl(provider)}
+            className="mt-1.5 inline-flex items-center gap-1 text-xs text-accent-blue hover:underline"
+          >
+            Get your API key
+            <ExternalLink size={10} />
+          </button>
         </div>
 
         {/* Model Selection */}
         <div>
           <Select
             label="Model"
-            value={localSettings.anthropic.defaultModel}
-            onChange={handleModelChange}
-            options={AVAILABLE_MODELS}
+            value={providerSettings.defaultModel}
+            onChange={(e) => handleProviderSettingChange(provider, 'defaultModel', e.target.value)}
+            options={models}
+            className="text-sm"
           />
         </div>
 
-        {/* Max Tokens Selection */}
+        {/* Max Tokens */}
         <div>
           <Select
             label="Max Response Tokens"
-            value={localSettings.anthropic.maxTokens.toString()}
-            onChange={handleMaxTokensChange}
+            value={providerSettings.maxTokens.toString()}
+            onChange={(e) => handleProviderSettingChange(provider, 'maxTokens', parseInt(e.target.value, 10))}
             options={MAX_TOKENS_OPTIONS}
+            className="text-sm"
           />
-          <p className="mt-1.5 text-[12px] text-tertiary">
-            Maximum length of AI responses. Lower values reduce cost but may truncate responses.
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <Modal
+      isOpen={isSettingsOpen}
+      onClose={closeSettings}
+      title="Settings"
+      maxWidth="lg"
+    >
+      <div className="space-y-6">
+        {/* Global Shortcut Key */}
+        <div>
+          <label className="block text-sm font-medium text-primary mb-2">
+            Global Shortcut Key
+          </label>
+          <ShortcutRecorder
+            value={localSettings.shortcut}
+            onChange={handleShortcutChange}
+          />
+          <p className="mt-1.5 text-xs text-tertiary">
+            Set a keyboard shortcut to toggle the app from anywhere
           </p>
         </div>
 
-        {/* API Key */}
-        <div>
-          <label className="block text-[13px] font-medium text-primary mb-1.5">
-            Anthropic API Key
-          </label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Input
-                type={showApiKey ? 'text' : 'password'}
-                value={localSettings.anthropic.apiKey}
-                onChange={handleApiKeyChange}
-                placeholder="sk-ant-..."
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowApiKey(!showApiKey)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-primary transition-colors"
-              >
-                {showApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-            <Button
-              variant="secondary"
-              onClick={handleTestConnection}
-              disabled={!localSettings.anthropic.apiKey.trim() || testing}
-              isLoading={testing}
-              className="flex-shrink-0"
-            >
-              Test
-            </Button>
+        {/* AI Providers Section */}
+        <div className="space-y-4">
+          <h2 className="text-sm font-semibold text-primary border-b border-border-subtle pb-2">
+            AI Provider
+          </h2>
+
+          {/* Provider Tabs */}
+          <div className="flex gap-2 border-b border-border-subtle">
+            {(['anthropic', 'openai', 'openrouter'] as ProviderKey[]).map((provider) => {
+              const isActive = localSettings.defaultProvider === provider;
+              return (
+                <button
+                  key={provider}
+                  onClick={() => setSelectedProvider(provider)}
+                  className={`px-4 py-2 text-xs font-medium transition-colors relative ${
+                    selectedProvider === provider
+                      ? 'text-accent-blue'
+                      : 'text-tertiary hover:text-primary'
+                  }`}
+                >
+                  {PROVIDER_INFO[provider].name.split(' ')[0]}
+                  {isActive && (
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-green-500 rounded-full"></span>
+                  )}
+                  {selectedProvider === provider && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-blue"></div>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Test Result */}
-          {testResult && (
-            <p className={`mt-2 text-[12px] ${testResult === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-              {testResult === 'success' ? '✓ Connection successful' : '✗ Invalid API key format'}
-            </p>
-          )}
-
-          <button
-            type="button"
-            onClick={handleOpenApiKeyUrl}
-            className="mt-2 inline-flex items-center gap-1 text-[12px] text-accent-blue hover:underline"
-          >
-            Get your API key
-            <ExternalLink size={12} />
-          </button>
+          {/* Selected Provider Settings */}
+          {renderProviderSection(selectedProvider)}
         </div>
 
-        {/* Footer Actions */}
-        <div className="flex items-center justify-between gap-3 pt-3 border-t border-border-subtle">
-          <div className="flex-1">
-            <UpdateChecker />
-            {hasChanges && (
-              <p className="text-[12px] text-tertiary mt-2">
-                You have unsaved changes
-              </p>
-            )}
-          </div>
-          <Button
-            variant="primary"
-            onClick={handleSave}
-            disabled={!hasChanges || saving}
-            isLoading={saving}
-          >
-            Save Changes
-          </Button>
+        {/* Footer with Update Checker */}
+        <div className="pt-4 border-t border-border-subtle">
+          <UpdateChecker />
         </div>
       </div>
     </Modal>

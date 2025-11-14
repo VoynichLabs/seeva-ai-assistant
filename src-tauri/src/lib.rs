@@ -82,6 +82,7 @@ pub fn run() {
             commands::set_default_provider,
             commands::set_api_key,
             commands::validate_api_key,
+            commands::set_validation_state,
             // Screenshot commands
             commands::capture_screenshot,
             commands::capture_all_screenshots,

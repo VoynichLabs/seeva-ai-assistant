@@ -66,7 +66,7 @@ export function Modal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-3 border-b border-border-subtle">
+        <div className="flex items-center justify-between px-3 py-1 border-b border-border-subtle">
           <h2 className="text-[16px] font-semibold text-primary">{title}</h2>
           {showCloseButton && (
             <button

@@ -74,7 +74,6 @@ export function UpdateChecker({ className = '' }: UpdateCheckerProps) {
       const update = await check();
 
       if (!update) {
-        console.log('No update available during install attempt');
         return;
       }
 

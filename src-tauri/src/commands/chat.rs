@@ -1,7 +1,7 @@
 use crate::managers::ThreadManager;
 use crate::models::{Message, MessageRole};
 use crate::services::ai::provider::{AIProvider, ChatMessage, ChatRequest, StreamEvent};
-use crate::services::ai::AnthropicProvider;
+use crate::services::ai::{AnthropicProvider, OpenAIProvider, OpenRouterProvider};
 use futures::StreamExt;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -55,6 +55,8 @@ pub async fn send_message(
     // Create AI provider
     let ai_provider: Box<dyn AIProvider> = match provider.as_str() {
         "anthropic" => Box::new(AnthropicProvider::new(api_key)),
+        "openai" => Box::new(OpenAIProvider::new(api_key)),
+        "openrouter" => Box::new(OpenRouterProvider::new(api_key)),
         _ => return Err(format!("Unsupported provider: {}", provider)),
     };
 

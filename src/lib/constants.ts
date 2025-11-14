@@ -26,6 +26,11 @@ export const DEFAULT_SETTINGS: Settings = {
       maxTokens: 4096,
       temperature: 1.0,
     },
+    openrouter: {
+      model: 'anthropic/claude-3.5-sonnet',
+      maxTokens: 4096,
+      temperature: 1.0,
+    },
     gemini: {
       model: 'gemini-1.5-pro',
       maxTokens: 4096,
@@ -102,14 +107,7 @@ export const AVAILABLE_MODELS: Record<string, ModelInfo[]> = {
       name: 'GPT-4',
       provider: 'openai',
       contextWindow: 8192,
-      supportsVision: false,
-    },
-    {
-      id: 'gpt-3.5-turbo',
-      name: 'GPT-3.5 Turbo',
-      provider: 'openai',
-      contextWindow: 16385,
-      supportsVision: false,
+      supportsVision: true,
     },
   ],
   gemini: [

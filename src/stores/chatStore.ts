@@ -273,6 +273,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const providerNames: Record<string, string> = {
         anthropic: 'Anthropic Claude',
         openai: 'OpenAI',
+        openrouter: 'OpenRouter',
         gemini: 'Google Gemini',
         ollama: 'Ollama'
       };
@@ -280,6 +281,27 @@ export const useChatStore = create<ChatState>((set, get) => ({
       useToastStore.getState().addToast({
         type: 'error',
         message: `API key not configured for ${providerNames[provider] || provider}. Please add your API key in settings.`,
+        duration: 7000
+      });
+
+      // Auto-open settings modal
+      uiStore.openSettings();
+      return;
+    }
+
+    // Check if API key is validated
+    if (providerSettings?.isValidated !== true) {
+      const providerNames: Record<string, string> = {
+        anthropic: 'Anthropic Claude',
+        openai: 'OpenAI',
+        openrouter: 'OpenRouter',
+        gemini: 'Google Gemini',
+        ollama: 'Ollama'
+      };
+
+      useToastStore.getState().addToast({
+        type: 'error',
+        message: `Invalid API key for ${providerNames[provider] || provider}. Please check your API key in settings.`,
         duration: 7000
       });
 

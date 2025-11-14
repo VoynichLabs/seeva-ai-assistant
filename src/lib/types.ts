@@ -2,7 +2,7 @@
 
 export type MessageRole = 'user' | 'assistant' | 'system';
 
-export type AIProvider = 'anthropic' | 'openai' | 'gemini' | 'ollama';
+export type AIProvider = 'anthropic' | 'openai' | 'openrouter' | 'gemini' | 'ollama';
 
 export interface Message {
   id: string;
@@ -49,6 +49,7 @@ export interface Settings {
     default: AIProvider;
     anthropic: ProviderConfig;
     openai: ProviderConfig;
+    openrouter: ProviderConfig;
     gemini: ProviderConfig;
     ollama: ProviderConfig;
   };

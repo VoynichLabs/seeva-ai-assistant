@@ -31,63 +31,46 @@ export function InputBar() {
   // Restore screenshot from cache when component mounts (after window reopen)
   useEffect(() => {
     if (!currentScreenshot && screenshotCache) {
-      console.log('🔄 [UI] Restoring screenshot from cache after window reopen');
       setScreenshot(screenshotCache);
     }
   }, []); // Empty deps = run once on mount
 
-  // Check if API key is configured
+  // Check if API key is configured and validated
   const provider = appSettings.defaultProvider;
   const providerSettings = (appSettings as any)[provider];
   const hasApiKey = providerSettings?.apiKey && providerSettings.apiKey.trim() !== '';
+  const isApiKeyValidated = providerSettings?.isValidated === true;
 
   const handleScreenshot = async () => {
-    console.log('🎬 [UI] Camera button clicked');
-
     try {
-      // STEP 1: Show loading placeholder IMMEDIATELY (before API call)
+      // Show loading placeholder IMMEDIATELY (before API call)
       // This is a 1x1 transparent PNG - super tiny, instant display
       const loadingPlaceholder = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
-      console.log('⏳ [UI] Showing loading placeholder immediately');
       setScreenshot(loadingPlaceholder);
-      setCapturingScreenshot(true); // This shows the loading overlay
+      setCapturingScreenshot(true);
 
-      // STEP 2: Now call API (user already sees preview area with spinner)
-      console.log('📡 [UI] Calling Tauri screenshot API...');
-      const startTime = performance.now();
+      // Call API (user already sees preview area with spinner)
       const screenshot = await screenshotAPI.capture();
-      const endTime = performance.now();
-      const duration = (endTime - startTime).toFixed(0);
 
-      console.log(`✅ [UI] Screenshot received from backend (took ${duration}ms)`);
-      console.log(`📊 [UI] Screenshot base64 length: ${screenshot.length} characters`);
-
-      // STEP 3: Update with real screenshot
-      console.log('🖼️  [UI] Updating with real screenshot...');
+      // Update with real screenshot
       setScreenshot(screenshot);
-      setCachedScreenshot(screenshot); // Store in cache for window reopens
+      setCachedScreenshot(screenshot);
 
-      // STEP 4: Keep processing overlay for smooth transition
-      console.log('⏳ [UI] Showing processing state for smooth UX...');
+      // Keep processing overlay for smooth transition
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      // STEP 5: Remove loading overlay
-      console.log('✅ [UI] Screenshot ready');
+      // Remove loading overlay
       setCapturingScreenshot(false);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`❌ [UI] Screenshot capture failed: ${errorMessage}`);
-      console.error('[UI] Full error object:', error);
+      console.error(`Screenshot capture failed: ${errorMessage}`);
+      console.error('Full error object:', error);
 
-      console.log('🔄 [UI] Resetting screenshot states due to error');
       setCapturingScreenshot(false);
       setCompressingScreenshot(false);
       clearScreenshot();
-
-      // TODO: Add toast notification to inform user about the error
-      // toast.error(`Screenshot failed: ${errorMessage}`);
     }
   };
 
@@ -157,8 +140,28 @@ export function InputBar() {
       {!hasApiKey && (
         <div className="px-2 sm:px-4 pb-2">
           <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
-            <span className="text-[13px] text-yellow-200 flex-1">
+            <span className="text-[13px] text-yellow-700 flex-1">
               API key not configured. Please add your API key to send messages.
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={openSettings}
+              className="flex-shrink-0"
+            >
+              <Settings size={16} />
+              Settings
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Invalid API Key Warning */}
+      {hasApiKey && !isApiKeyValidated && (
+        <div className="px-2 sm:px-4 pb-2">
+          <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+            <span className="text-[13px] text-red-600 flex-1">
+              Invalid API key. Please check your API key in settings.
             </span>
             <Button
               variant="secondary"
@@ -218,9 +221,9 @@ export function InputBar() {
                 variant="ghost"
                 size="sm"
                 onClick={handleScreenshot}
-                disabled={isCapturingScreenshot || isCompressingScreenshot || !hasApiKey}
+                disabled={isCapturingScreenshot || isCompressingScreenshot || !hasApiKey || !isApiKeyValidated}
                 className="flex-shrink-0 p-2"
-                title="Capture screenshot"
+                title={!hasApiKey ? 'Configure API key first' : !isApiKeyValidated ? 'Validate API key first' : 'Capture screenshot'}
               >
                 <Camera size={22} />
               </Button>
@@ -229,9 +232,9 @@ export function InputBar() {
                 variant="ghost"
                 size="sm"
                 onClick={handleSend}
-                disabled={!input.trim() || isCapturingScreenshot || isCompressingScreenshot || !hasApiKey}
+                disabled={!input.trim() || isCapturingScreenshot || isCompressingScreenshot || !hasApiKey || !isApiKeyValidated}
                 className="flex-shrink-0 p-2"
-                title={!hasApiKey ? 'Configure API key first' : 'Send message'}
+                title={!hasApiKey ? 'Configure API key first' : !isApiKeyValidated ? 'Validate API key first' : 'Send message'}
               >
                 <Send size={22} />
               </Button>

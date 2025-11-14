@@ -38,10 +38,7 @@ export function ThreadSidebar({ isOverlayMode = false }: ThreadSidebarProps) {
   };
 
   const handleDeleteThread = async (threadId: string, e: React.MouseEvent) => {
-    console.log('🗑️ Delete button clicked for thread:', threadId);
-
     e.stopPropagation();
-    console.log('✓ Event propagation stopped');
 
     const confirmed = await ask('Are you sure you want to delete this thread?', {
       title: 'Delete Thread',
@@ -49,24 +46,17 @@ export function ThreadSidebar({ isOverlayMode = false }: ThreadSidebarProps) {
       okLabel: 'Delete',
       cancelLabel: 'Cancel'
     });
-    console.log('📊 Dialog result:', confirmed);
 
     if (confirmed) {
-      console.log('✓ User confirmed deletion');
       setIsDeletingThread(threadId);
 
       try {
-        console.log('📡 Calling deleteThread API...');
         await deleteThread(threadId);
-        console.log('✅ Thread deleted successfully');
       } catch (error) {
-        console.error('❌ Failed to delete thread:', error);
+        console.error('Failed to delete thread:', error);
       } finally {
         setIsDeletingThread(null);
-        console.log('🔄 Reset deleting state');
       }
-    } else {
-      console.log('❌ User cancelled deletion');
     }
   };
 

@@ -78,12 +78,14 @@ export interface ProviderSettings {
   defaultModel: string;
   temperature: number;
   maxTokens: number;
+  isValidated: boolean;
 }
 
 export interface AppSettings {
   defaultProvider: string;
   anthropic: ProviderSettings;
   openai: ProviderSettings;
+  openrouter: ProviderSettings;
   gemini: ProviderSettings;
   ollama: ProviderSettings;
   theme: string;
@@ -109,6 +111,10 @@ export const settingsAPI = {
 
   validateApiKey: async (provider: string, apiKey: string): Promise<{ valid: boolean; availableModels: string[]; defaultModel: string }> => {
     return await invoke('validate_api_key', { provider, apiKey });
+  },
+
+  setValidationState: async (provider: string, isValidated: boolean): Promise<void> => {
+    return await invoke('set_validation_state', { provider, isValidated });
   },
 };
 

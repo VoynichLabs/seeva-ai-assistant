@@ -26,7 +26,7 @@ I was switching to AI tools 50+ times per day while coding. The constant context
 - **Screen Vision**: Click "Watch Screen" and AI sees your screen automatically using Claude's vision API
 - **Works Everywhere**: Use it in any application, not just code editors or browsers
 - **Multi-Thread Conversations**: Organize different topics into separate conversation threads
-- **Multiple AI Providers**: Support for Anthropic Claude, OpenAI GPT, Google Gemini, and Ollama local models
+- **Multiple AI Providers**: Support for Anthropic Claude, OpenAI GPT, OpenRouter (100+ models), Google Gemini, and Ollama local models
 - **Always On Top**: Floating window that never gets lost behind other apps
 - **Local Storage**: All conversations and settings stored on your device using SQLite
 - **Privacy First**: Your data stays on your machine except when calling your chosen AI provider
@@ -105,7 +105,10 @@ To create a signed release (requires setup of signing keys):
 ## Quick Start
 
 1. Launch the app and go to Settings
-2. Add your Anthropic API key under AI Providers
+2. Choose your AI provider and add your API key:
+   - **Anthropic Claude**: Get your API key from [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
+   - **OpenAI GPT**: Get your API key from [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+   - **OpenRouter**: Get your API key from [openrouter.ai/keys](https://openrouter.ai/keys) (gives access to 100+ models from multiple providers)
 3. Grant system permissions when prompted:
    - **macOS**: Screen Recording and Accessibility permissions
    - **Windows**: Screen capture access
@@ -114,6 +117,12 @@ To create a signed release (requires setup of signing keys):
 5. Click "Watch Screen" to capture and analyze your screen
 6. Ask questions about what you are seeing
 7. Press the hotkey again to hide the window and return to work
+
+### Choosing a Provider
+
+- **Anthropic (Claude)**: Best for general use. Latest models: Claude 4.5 Sonnet, Claude 4.1 Opus, Claude 4.5 Haiku
+- **OpenAI (GPT)**: Great for ChatGPT-style interactions. Models: GPT-4o, GPT-4 Turbo, GPT-3.5
+- **OpenRouter**: Access 100+ models including Claude, GPT, Gemini, Llama, DeepSeek, and more with a single API key. Perfect for experimentation and trying different models
 
 ## Tech Stack
 
@@ -157,19 +166,20 @@ Seeva stores all data locally on your computer. No cloud services or external se
   - macOS/Linux: `~/.config/ai.seeva.assistant/settings.json`
   - Windows: `%APPDATA%\ai.seeva.assistant\settings.json`
 - Contents:
-  - API keys for AI providers
+  - API keys for AI providers (Anthropic, OpenAI, OpenRouter)
   - Default provider and model settings
   - UI preferences including theme
   - Keyboard shortcut configuration
 
 ### Privacy Notes
 
-- Your conversations and screen captures are only sent to the AI provider you select (Anthropic, OpenAI, etc.)
+- Your conversations and screen captures are only sent to the AI provider you select (Anthropic, OpenAI, OpenRouter, etc.)
 - API keys are stored in plain text in the settings file. Ensure your system has appropriate file permissions
-- No analytics or telemetry data is collected
+- No analytics or telemetry data is collected by Seeva itself
 - Screen captures are stored as base64-encoded JPEG images in the database
 - You can delete individual messages, entire threads, or clear all data by removing the database file
 - Screen Recording permission is required for the "Watch Screen" feature to function
+- Each provider has their own data retention policies - check their documentation for details
 
 ## License
 
